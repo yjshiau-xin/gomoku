@@ -5,59 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>五子棋</title>
 <style>
+/* 固定用深色底 */
 :root {
-  --bg: #D6E1EE;
-  --card: #F3F6FA;
-  --ink: #16233A;
-  --muted: #52627A;
-  --line: #B5C4D7;
-  --accent: #8A6C16;
-  --wood: #DDB66C;
-  --wood-edge: #B98C42;
-  --grid: #3E2C10;
-  --focus: #1D6FD8;
-  --shadow: 0 2px 10px rgba(20, 35, 60, .15);
-  --lv0: #2E7D4F;
-  --lv1: #2F6DB0;
-  --lv2: #AD5A14;
-  --lv3: #B8322A;
-  --danger: #8E2626;
-  --danger-hover: #4F1212;
-  --orange: #A84B16;
-  --orange-hover: #6A2B08;
-  --brass: #8A6516;
-  --brass-hover: #5C430D;
-  --good: #2E7D4F;
-  --q: #A88A10;
-  --miss: #C9661A;
-  --bad: #B8322A;
-  --me: #2E7D4F;
-  --cpu: #8C99AB;
-  color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0C182B;
-    --card: #15253D;
-    --ink: #E3EAF4;
-    --muted: #97A8BF;
-    --line: #2C4060;
-    --accent: #C8A44D;
-    --wood: #CFA65E;
-    --wood-edge: #9E7535;
-    --grid: #2E200A;
-    --focus: #6FB0FF;
-    --shadow: 0 2px 12px rgba(0, 0, 0, .45);
-    --q: #D9B83A;
-    --miss: #E8873A;
-    --bad: #E0564C;
-    --good: #4CAF73;
-    --me: #4CAF73;
-    --cpu: #4A5B75;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
   --bg: #0C182B;
   --card: #15253D;
   --ink: #E3EAF4;
@@ -69,10 +18,20 @@
   --grid: #2E200A;
   --focus: #6FB0FF;
   --shadow: 0 2px 12px rgba(0, 0, 0, .45);
+  --lv0: #2E7D4F;
+  --lv1: #2F6DB0;
+  --lv2: #AD5A14;
+  --lv3: #B8322A;
+  --danger: #8E2626;
+  --danger-hover: #4F1212;
+  --orange: #A84B16;
+  --orange-hover: #6A2B08;
+  --brass: #8A6516;
+  --brass-hover: #5C430D;
+  --good: #4CAF73;
   --q: #D9B83A;
   --miss: #E8873A;
   --bad: #E0564C;
-  --good: #4CAF73;
   --me: #4CAF73;
   --cpu: #4A5B75;
   color-scheme: dark;
@@ -87,7 +46,7 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 button, input { font: inherit; color: inherit; }
-.app { max-width: 1100px; margin: 0 auto; padding: 16px 24px 32px; }
+.app { max-width: 1100px; margin: 0 auto; padding: 20px 24px 32px; }
 
 /* 標題列 */
 .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
@@ -113,12 +72,14 @@ h1 {
 
 /* 版面 */
 .layout { display: flex; gap: 24px; align-items: flex-start; }
-.board-wrap { flex: 1 1 auto; display: flex; justify-content: center; }
-.panel { flex: 0 0 310px; display: flex; flex-direction: column; gap: 14px; }
+.board-wrap { flex: 1 1 auto; min-width: 0; display: flex; justify-content: center; }
+.side { flex: 0 0 360px; min-width: 0; display: flex; flex-direction: column; gap: 22px; }
+.panel { display: flex; flex-direction: column; gap: 14px; }
 
 /* 棋盤 */
 .board {
   width: max(420px, min(calc(100vh - 110px), 640px));
+  max-width: 100%;
   padding: 2.2%;
   border-radius: 10px;
   background: linear-gradient(135deg, rgba(255, 255, 255, .18), rgba(0, 0, 0, .06)), var(--wood);
@@ -284,6 +245,112 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .chip[aria-current="true"] { background: var(--ink); color: var(--card); }
 .hint { margin: 10px 0 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
 
+/* 狀態欄右上角的難度標籤 */
+/* 狀態欄（照黑白棋的樣子） */
+.st-card { border: 1px solid rgba(200, 164, 77, .55); padding: 14px 16px 12px; }
+.st-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.st-top .status { min-width: 0; font-size: 18px; white-space: nowrap; }
+.st-name { padding-left: 10px; margin-left: 2px; border-left: 1px solid var(--line); color: var(--accent); overflow: hidden; text-overflow: ellipsis; }
+.st-name:empty { display: none; }
+.st-btns { display: flex; gap: 6px; flex: none; }
+.sbtn { padding: 6px 9px; border-radius: 2px; font-size: 15px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.sbtn.ghost { background: #253650; border: 1px solid #34486A; color: var(--ink); }
+.sbtn.ghost:hover:not(:disabled) { background: #314767; }
+.sbtn.orange { background: var(--orange); border: 1px solid var(--orange); color: #FFF; }
+.sbtn.orange:hover:not(:disabled) { background: var(--orange-hover); border-color: var(--orange-hover); }
+.st-mid { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+.st-free { margin: 0; text-align: right; font-size: 14px; color: var(--muted); }
+.st-count { display: flex; align-items: center; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 16px; white-space: nowrap; }
+.st-count b { margin: 0 2px; font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.snd { flex: none; padding: 3px 8px; border: 1px solid var(--line); border-radius: 6px; background: transparent; font-size: 13px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.snd:hover { border-color: var(--ink); color: var(--ink); }
+.st-cpu { margin-left: auto; color: var(--muted); font-size: 14px; }
+.st-cpu b { font-size: 15px; font-weight: 700; margin: 0; }
+.lvtxt.lv0 { color: #5CC18A; }
+.lvtxt.lv1 { color: #7DB1EE; }
+.lvtxt.lv2 { color: #EE9A50; }
+.lvtxt.lv3 { color: #EE6A5F; }
+.helpers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.helpers button { padding: 7px 4px; border: 1px solid var(--line); border-radius: 8px; background: transparent; font-size: 14px; cursor: pointer; white-space: nowrap; }
+.helpers button:hover { border-color: var(--ink); }
+.helpers button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--card); }
+.actions.small .btn { padding: 8px; font-size: 15px; }
+
+/* 開局頁面 */
+#startMask { position: fixed; inset: 0; z-index: 30; overflow: auto; display: flex; justify-content: center; align-items: flex-start; padding: 32px 16px; background: var(--bg); }
+.start { width: min(440px, 100%); padding: 18px 22px 16px; border-radius: 14px; background: var(--card); box-shadow: var(--shadow); }
+.start-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+.start-head h2 { grid-column: 2; margin: 0; font-family: "Songti TC", "STSong", serif; font-size: 34px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.start-head .link { justify-self: end; font-size: 20px; font-weight: 700; }
+.start-sec { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.start-sec h3 { margin: 0 0 10px; text-align: center; font-size: 16px; font-weight: 600; letter-spacing: .15em; color: var(--accent); }
+.start input {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 3px double var(--accent);
+  border-radius: 4px;
+  background: var(--bg);
+  text-align: center;
+  font-size: 22px;
+  letter-spacing: .08em;
+}
+.start input:focus { outline: none; border-color: var(--focus); }
+.start input[readonly] { border-style: solid; border-width: 1px; border-color: var(--line); color: var(--muted); }
+.start .hint, .start .err { text-align: center; }
+.start .err { margin: 6px 0 0; font-size: 14px; color: var(--bad); }
+.pick { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pick.four { grid-template-columns: repeat(4, 1fr); }
+.pick button {
+  padding: 12px 4px;
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 18px;
+  letter-spacing: .1em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pick button:hover { border-color: var(--ink); color: var(--ink); }
+.pick button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.start-go {
+  display: block;
+  width: 100%;
+  margin-top: 18px;
+  padding: 14px;
+  border: none;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #FFF;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: .2em;
+  cursor: pointer;
+}
+.start-go:hover { filter: brightness(.88); }
+.link { padding: 0; border: none; background: none; color: var(--accent); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; white-space: nowrap; }
+.link:disabled { opacity: .4; cursor: not-allowed; }
+.start-help { display: block; margin: 16px auto 0; font-size: 17px; font-weight: 600; }
+.start-foot { display: flex; align-items: center; gap: 18px; margin-top: 18px; font-size: 15px; }
+.start-foot .ver { margin-left: auto; font-size: 15px; text-decoration: underline; text-underline-offset: 4px; }
+.info-list { margin: 0; padding-left: 1.3em; font-size: 16px; line-height: 1.7; }
+.info-list li + li { margin-top: 6px; }
+/* 結果畫面：遊戲結束時跳出來 */
+#endMask { position: fixed; inset: 0; z-index: 35; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0, 0, 0, .45); }
+.end { width: min(400px, 100%); padding: 22px 24px; border: 1px solid var(--accent); border-radius: 6px; background: var(--card); box-shadow: 0 10px 34px rgba(0, 0, 0, .5); }
+.end h2 { margin: 0; text-align: center; font-family: "Songti TC", "STSong", serif; font-size: 34px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.end-score { margin: 14px 0 0; text-align: center; font-size: 34px; font-weight: 700; letter-spacing: .08em; color: var(--accent); }
+.end-sub { margin: 6px 0 0; text-align: center; font-size: 17px; color: var(--muted); }
+.end-rec { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 16px; font-size: 20px; font-weight: 700; color: var(--accent); }
+.end-rec.off { font-size: 16px; font-weight: 400; color: var(--muted); }
+.end-rec .btn { padding: 6px 14px; font-size: 17px; border-radius: 2px; }
+.end-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
+.end-actions .btn { padding: 16px 8px; font-size: 20px; border-radius: 2px; }
+.end-actions .start-go { margin: 0; padding: 16px 8px; font-size: 20px; letter-spacing: .1em; border-radius: 2px; }
+
+#infoMask { position: fixed; inset: 0; z-index: 45; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, .45); }
+
 /* 確認視窗：跳在按下的按鈕旁邊 */
 #popMask { position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, .18); }
 .pop {
@@ -313,7 +380,6 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .pop .btn { padding: 8px 14px; font-size: 15px; }
 
 /* 排行榜 */
-#rankMask { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, .45); }
 .sheet {
   width: min(520px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
@@ -325,32 +391,49 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .sheet-head h2 { margin: 0; font-size: 22px; color: var(--accent); font-family: "Songti TC", "STSong", serif; }
-.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-.tabs button { border: 2px solid var(--line); background: transparent; border-radius: 10px; padding: 8px 4px; font-size: 15px; cursor: pointer; white-space: nowrap; }
-.tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #FFF; }
-.sheet .seg { margin-bottom: 10px; }
-.rank-list { list-style: none; margin: 4px 0 0; padding: 0; min-height: 120px; }
-.rank-list li { display: grid; grid-template-columns: 34px 1fr auto auto; gap: 8px; align-items: center; padding: 7px 6px; border-bottom: 1px solid var(--line); font-size: 15px; }
-.rank-list li.mine { background: rgba(200, 164, 77, .18); border-radius: 8px; }
-.rank-list .no { font-weight: 700; text-align: center; }
-.rank-list .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rank-list .what { font-weight: 600; white-space: nowrap; }
-.rank-list .when { font-size: 12px; color: var(--muted); white-space: nowrap; }
-.rank-empty { padding: 24px 0; text-align: center; color: var(--muted); }
-.rank-foot { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.rank-foot p { margin: 0; font-size: 14px; color: var(--muted); }
+/* 雙週排名：放在遊戲畫面裡 */
+.rank-title { margin: 0 0 8px; font-family: "Songti TC", "STSong", serif; font-size: 26px; font-weight: 700; letter-spacing: .12em; color: var(--accent); }
+.rank-tabs { display: flex; align-items: flex-end; gap: 22px; border-bottom: 1px solid var(--line); }
+.rank-tabs button { padding: 0 0 8px; border: none; border-bottom: 3px solid transparent; margin-bottom: -1px; background: none; color: var(--muted); font-size: 17px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.rank-tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+.rank-period { margin-left: auto; padding-bottom: 8px; font-size: 14px; color: var(--muted); white-space: nowrap; }
+.rank-list { list-style: none; margin: 0; padding: 0; max-height: 440px; overflow-y: auto; }
+.rank-list li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto auto 44px 44px; gap: 8px; align-items: center; padding: 10px 2px; border-bottom: 1px solid var(--line); font-size: 16px; }
+.rank-list li.mine { background: rgba(200, 164, 77, .14); }
+.rank-list .no { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rank-list .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.rank-list .lv { font-weight: 700; white-space: nowrap; }
+.rank-list .lv.lv0 { color: #5CC18A; }
+.rank-list .lv.lv1 { color: #7DB1EE; }
+.rank-list .lv.lv2 { color: #EE9A50; }
+.rank-list .lv.lv3 { color: #EE6A5F; }
+.rank-list .side { color: var(--muted); }
+.rank-list .what { text-align: right; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rank-list .when { text-align: right; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rank-empty { display: block !important; padding: 28px 0 !important; text-align: center; color: var(--muted); font-size: 16px !important; }
+.rank-foot { display: flex; gap: 24px; margin-top: 12px; font-size: 16px; }
+.rank-time { margin: 10px 0 0; font-size: 15px; color: var(--muted); }
 
 @media (prefers-reduced-motion: reduce) {
   .stone.drop, .cell.m-hint .mark { animation: none; }
   .wr-bar span { transition: none; }
 }
 @media (max-width: 800px) {
+  .end h2 { font-size: 28px; }
+  #startMask { padding: 16px; }
+  .start { padding: 16px; }
+  .start-head h2 { font-size: 28px; }
+  .pick button { font-size: 16px; letter-spacing: .05em; }
   .app { padding: 12px 16px 24px; }
   h1 { font-size: 26px; }
   .layout { flex-direction: column; align-items: stretch; gap: 14px; }
+  .side { flex: none; }
   .board { width: 100%; padding: 2.5%; }
   .panel { flex: none; }
-  .status { font-size: 18px; }
+  .status, .st-top .status { font-size: 18px; }
+  .sbtn { padding: 6px 8px; font-size: 15px; }
+  .st-count { font-size: 15px; gap: 5px; }
+  .st-count b { font-size: 19px; }
   .btn { font-size: 15px; }
 }
 </style>
@@ -361,19 +444,11 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="五子棋">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#D6E1EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C182B" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0C182B" media="(prefers-color-scheme: dark)">
 </head>
 <body>
 <main class="app">
-  <header class="top">
-    <h1>五子棋<span class="ver">v1.0</span></h1>
-    <div class="tools">
-      <button id="soundBtn" class="tool" type="button" aria-pressed="true">🔊 聲音</button>
-      <button id="themeBtn" class="tool" type="button">🌓 自動</button>
-    </div>
-  </header>
-
   <div class="layout">
     <section class="board-wrap">
       <div id="board" class="board">
@@ -384,47 +459,42 @@ button:disabled { opacity: .4; cursor: not-allowed; }
       </div>
     </section>
 
+    <div class="side">
     <aside id="gamePanel" class="panel">
-      <div class="card">
-        <p class="status"><span id="statusDot" class="mini black"></span><span id="status">輪到你了</span></p>
-        <p id="sub" class="sub"></p>
+      <div class="card st-card">
+        <div class="st-top">
+          <p class="status"><span id="statusDot" class="mini black"></span><span id="status">輪到黑棋</span><span id="stName" class="st-name"></span></p>
+          <div class="st-btns">
+            <button id="undoBtn" class="sbtn ghost" type="button">反悔</button>
+            <button id="hintBtn" class="sbtn orange" type="button">建議一手</button>
+          </div>
+        </div>
+        <div class="st-mid">
+          <button id="soundBtn" class="snd" type="button" aria-pressed="true">🔊 聲音</button>
+          <p id="freeNote" class="st-free">建議可 3 次不影響排名</p>
+        </div>
         <div id="wrBox" class="wr" hidden>
           <div class="wr-bar"><span id="wrFill" style="width: 50%"></span></div>
           <div class="wr-text"><span id="wrMe">你 50%</span><span id="wrCpu">電腦 50%</span></div>
         </div>
+        <div class="st-count">
+          <span id="meDot" class="mini black"></span><span>已下</span><b id="movesN">0</b><span>子</span>
+          <span class="st-cpu">電腦 <b id="levelBadge" class="lvtxt lv1">中</b></span>
+        </div>
+        <p id="sub" class="sub" hidden></p>
         <p id="dangerNote" class="note warn" hidden></p>
-        <p id="rankNote" class="note" hidden></p>
         <p id="recNote" class="note ok" hidden></p>
         <button id="nameBtn" class="btn orange" type="button" hidden style="margin-top: 10px; width: 100%">✍️ 寫下名字，登上排行榜</button>
       </div>
 
-      <div class="card">
-        <h2>你拿</h2>
-        <div id="colorSeg" class="seg">
-          <button type="button" data-color="1">⚫ 黑棋（先下）</button>
-          <button type="button" data-color="2">⚪ 白棋（後下）</button>
-        </div>
-        <h2>電腦</h2>
-        <div id="levelSeg" class="seg four">
-          <button type="button" class="lv0" data-level="0">弱</button>
-          <button type="button" class="lv1" data-level="1">中</button>
-          <button type="button" class="lv2" data-level="2">強</button>
-          <button type="button" class="lv3" data-level="3">最強</button>
-        </div>
-        <h2>小幫手（不影響排名）</h2>
-        <div class="seg">
-          <button id="dangerBtn" type="button" aria-pressed="false">⚠️ 危險提醒</button>
-          <button id="wrBtn" type="button" aria-pressed="false">📊 誰比較有利</button>
-        </div>
+      <div class="helpers" aria-label="小幫手（不影響排名）">
+        <button id="dangerBtn" type="button" aria-pressed="false">⚠️ 危險提醒</button>
+        <button id="wrBtn" type="button" aria-pressed="false">📊 誰比較有利</button>
       </div>
 
-      <div class="actions">
-        <button id="undoBtn" class="btn ghost" type="button">↩ 悔棋<small id="undoLeft">免費還有 3 次</small></button>
-        <button id="hintBtn" class="btn orange" type="button">💡 建議一手<small id="hintLeft" class="on-color">免費還有 3 次</small></button>
+      <div class="actions small">
         <button id="resignBtn" class="btn brass" type="button">🏳️ 認輸並覆盤</button>
         <button id="newBtn" class="btn danger" type="button">重新開始</button>
-        <button id="reviewBtn" class="btn ghost" type="button">📖 覆盤</button>
-        <button id="rankBtn" class="btn ghost" type="button">🏆 排行榜</button>
       </div>
     </aside>
 
@@ -457,36 +527,84 @@ button:disabled { opacity: .4; cursor: not-allowed; }
         <button id="rvBack" class="btn ghost" type="button">回到下棋</button>
       </div>
     </aside>
+
+    <section id="rankPanel" aria-labelledby="rankTitle">
+      <h2 id="rankTitle" class="rank-title">雙週排名</h2>
+      <div id="rankTabs" class="rank-tabs" role="tablist">
+        <button id="tabCur" type="button" role="tab" aria-selected="true">本期排名</button>
+        <button id="tabPrev" type="button" role="tab" aria-selected="false" tabindex="-1">上期排名</button>
+        <span id="rankPeriod" class="rank-period"></span>
+      </div>
+      <ol id="rankList" class="rank-list"></ol>
+      <div class="rank-foot">
+        <button id="rankRefresh" class="link" type="button">更新排名</button>
+        <button id="rankExport" class="link" type="button">匯出排名</button>
+      </div>
+      <p id="rankTime" class="rank-time"></p>
+      <p id="rankNet" class="hint"></p>
+    </section>
+    </div>
   </div>
 </main>
 
-<div id="rankMask" hidden>
-  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rankTitle">
+<div id="startMask" hidden>
+  <div class="start" role="dialog" aria-modal="true" aria-labelledby="startTitle">
+    <div class="start-head">
+      <h2 id="startTitle">開始對局</h2>
+      <button id="startReview" class="link" type="button">覆盤</button>
+    </div>
+    <div class="start-sec">
+      <h3>輸入名字</h3>
+      <input id="nameInput" type="text" maxlength="12" autocomplete="nickname" placeholder="可以不寫" aria-label="輸入名字">
+      <p id="nameHint" class="hint">登上排行榜用的名字。</p>
+      <p id="nameErr" class="err" hidden>名字要 1 到 12 個字。</p>
+    </div>
+    <div class="start-sec">
+      <h3>玩家選棋</h3>
+      <div id="colorSeg" class="pick">
+        <button type="button" data-color="1">黑棋（先下）</button>
+        <button type="button" data-color="2">白棋（後下）</button>
+      </div>
+    </div>
+    <div class="start-sec">
+      <h3>電腦難易度</h3>
+      <div id="levelSeg" class="pick four">
+        <button type="button" data-level="0">弱</button>
+        <button type="button" data-level="1">中</button>
+        <button type="button" data-level="2">強</button>
+        <button type="button" data-level="3">最強</button>
+      </div>
+    </div>
+    <button id="startBtn" class="start-go" type="button">開始</button>
+    <button id="helpBtn" class="link start-help" type="button">第一次玩？看遊戲說明</button>
+    <div class="start-foot">
+      <button id="algoBtn" class="link" type="button">演算法邏輯</button>
+      <button id="tipsBtn" class="link" type="button">必勝口訣</button>
+      <span class="ver">v1.0.6</span>
+    </div>
+  </div>
+</div>
+
+<div id="endMask" hidden>
+  <div class="end" role="dialog" aria-modal="true" aria-labelledby="endTitle">
+    <h2 id="endTitle"></h2>
+    <p id="endScore" class="end-score"></p>
+    <p id="endSub" class="end-sub"></p>
+    <div id="endRec" class="end-rec"><span id="endRecText"></span><button id="endName" class="btn orange" type="button">改名字</button></div>
+    <div class="end-actions">
+      <button id="endReview" class="btn ghost" type="button">覆盤</button>
+      <button id="endAgain" class="start-go" type="button">再來一局</button>
+    </div>
+  </div>
+</div>
+
+<div id="infoMask" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
     <div class="sheet-head">
-      <h2 id="rankTitle">🏆 排行榜</h2>
-      <button id="rankClose" class="tool" type="button">✕ 關閉</button>
+      <h2 id="infoTitle"></h2>
+      <button id="infoClose" class="tool" type="button">✕ 關閉</button>
     </div>
-    <div id="rankTabs" class="tabs" role="tablist">
-      <button id="tabCur" type="button" role="tab" aria-selected="true" data-tab="cur">這一期</button>
-      <button id="tabPrev" type="button" role="tab" aria-selected="false" data-tab="prev" tabindex="-1">上一期</button>
-    </div>
-    <div id="rankLevel" class="seg four">
-      <button type="button" class="lv0" data-level="0">弱</button>
-      <button type="button" class="lv1" data-level="1">中</button>
-      <button type="button" class="lv2" data-level="2">強</button>
-      <button type="button" class="lv3" data-level="3">最強</button>
-    </div>
-    <div id="rankColor" class="seg">
-      <button type="button" data-color="1">⚫ 拿黑棋</button>
-      <button type="button" data-color="2">⚪ 拿白棋</button>
-    </div>
-    <p id="rankPeriod" class="hint"></p>
-    <ol id="rankList" class="rank-list"></ol>
-    <div class="rank-foot">
-      <p id="rankName"></p>
-      <button id="renameBtn" class="btn orange" type="button">改名字</button>
-    </div>
-    <p id="rankNet" class="hint"></p>
+    <ul id="infoList" class="info-list"></ul>
   </div>
 </div>
 
@@ -1131,13 +1249,13 @@ const anaBrain = new Brain();   // 勝率、建議一手、覆盤分析
 // ===== 設定 =====
 const LEVEL_NAMES = ["弱", "中", "強", "最強"];
 const CFG = { aiTime: [0, 0, 700, 1500], anaTime: 1000, reviewTime: 600, aiDelay: 450 };
-const FREE_UNDO = 3, FREE_HINT = 3, KEEP_GAMES = 10, MAX_GAMES = 40;
+const MAX_UNDO = 1, FREE_HINT = 3, KEEP_GAMES = 10, MAX_GAMES = 40;
 const STORE_KEY = "gomoku.v1", GAMES_KEY = "gomoku.games", RANK_KEY = "gomoku.rank";
 // 共用排行榜的網址：Google Apps Script 部署成「網頁應用程式」後，把網址貼在這裡
 let SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGPMtuJiQrrlmJlxucCI4u_BnflOecgs-2cUSDMTSaamDgo8MOCisp4rv6G9opOQS_/exec";
 const NAMES = { [BLACK]: "黑棋", [WHITE]: "白棋" };
 
-const S = { color: BLACK, level: 1, sound: true, theme: "auto", danger: false, wr: false, name: "" };
+const S = { color: BLACK, level: 1, sound: true, danger: false, wr: false, name: "" };
 let G = null;       // 這一局
 let R = null;       // 覆盤：{ entry, k }；entry 是 null 時顯示棋局清單
 let GAMES = [];     // 下過的棋（最新的在前面）
@@ -1204,7 +1322,6 @@ function load() {
     if (st.color === BLACK || st.color === WHITE) S.color = st.color;
     if (Number.isInteger(st.level) && st.level >= 0 && st.level <= 3) S.level = st.level;
     for (const k of ["sound", "danger", "wr"]) if (typeof st[k] === "boolean") S[k] = st[k];
-    if (["auto", "light", "dark"].includes(st.theme)) S.theme = st.theme;
     if (typeof st.name === "string") S.name = cleanName(st.name);
   }
   const g = data.game;
@@ -1234,7 +1351,7 @@ function loadGames() {
     typeof e.ranked === "boolean" && typeof e.replay === "boolean" && typeof e.kept === "boolean" && okEvals(e.evals)).slice(0, MAX_GAMES);
 }
 
-function saveRank() { store(RANK_KEY, { pending: RK.pending, renames: RK.renames, mine: RK.mine, boards: RK.boards, period: RK.period }); }
+function saveRank() { store(RANK_KEY, { pending: RK.pending, renames: RK.renames, mine: RK.mine, boards: RK.boards, period: RK.period, updated: RK.updated }); }
 function okRecord(r) {
   return r && typeof r === "object" && /^[0-9a-f]{16}$/.test(r.id) && /^[0-9a-f]{32}$/.test(r.code) && [0, 1, 2, 3].includes(r.level) &&
     (r.color === BLACK || r.color === WHITE) && (r.result === "win" || r.result === "draw") && Number.isInteger(r.count) &&
@@ -1244,7 +1361,7 @@ function loadRank() {
   const d = fetchStore(RANK_KEY);
   if (!d || typeof d !== "object") return;
   if (Array.isArray(d.pending)) RK.pending = d.pending.filter(okRecord).slice(0, 50);
-  if (Array.isArray(d.renames)) RK.renames = d.renames.filter(x => x && /^[0-9a-f]{16}$/.test(x.id) && /^[0-9a-f]{32}$/.test(x.code) && cleanName(x.name)).slice(0, 200);
+  if (Array.isArray(d.renames)) RK.renames = d.renames.filter(x => x && /^[0-9a-f]{16}$/.test(x.id) && /^[0-9a-f]{32}$/.test(x.code) && cleanName(x.name)).slice(0, 50);
   if (d.mine && typeof d.mine === "object") {
     for (const [id, code] of Object.entries(d.mine).slice(-500)) if (/^[0-9a-f]{16}$/.test(id) && /^[0-9a-f]{32}$/.test(code)) RK.mine[id] = code;
   }
@@ -1308,13 +1425,8 @@ function tune(freqs, step) {
   });
 }
 
-// ---- 主題 ----
-const THEME_LABEL = { auto: "🌓 自動", light: "☀️ 淺色", dark: "🌙 深色" };
-function applyTheme() {
-  const root = document.documentElement;
-  if (S.theme === "auto") root.removeAttribute("data-theme");
-  else root.setAttribute("data-theme", S.theme);
-  $("themeBtn").textContent = THEME_LABEL[S.theme];
+// ---- 聲音開關 ----
+function applySound() {
   $("soundBtn").textContent = S.sound ? "🔊 聲音" : "🔇 靜音";
   $("soundBtn").setAttribute("aria-pressed", String(S.sound));
 }
@@ -1433,37 +1545,34 @@ function render(animate = true) {
 }
 
 function renderStatus(danger) {
-  const n = playerMoves();
-  let dot = turn(), text, sub;
   const res = resultOf(G);
+  const me = S.name || "你";
+  let dot = turn(), text, who = "", sub = "";
   if (res === "draw") {
-    dot = G.color;
-    text = "和局！";
-    sub = "棋盤下滿了，你們一樣厲害。";
+    dot = G.color; text = "和局";
   } else if (res === "win") {
-    dot = G.color;
-    text = "🎉 你贏了！";
-    sub = `你下了 ${n} 手就連成五子。`;
+    dot = G.color; text = `${NAMES[G.color]}獲勝`; who = me;
   } else if (res === "resign") {
-    dot = G.color;
-    text = "你認輸了";
-    sub = "按「覆盤」看看哪裡可以下得更好。";
+    dot = G.color; text = "你認輸了"; who = me;
   } else if (res === "lose") {
-    dot = G.over.winner;
-    text = "電腦贏了";
-    sub = "差一點！可以按「悔棋」回去重下，或按「覆盤」看看哪裡下錯了。";
-  } else if (thinking || turn() !== G.color) {
-    text = "電腦在想⋯";
-    sub = `你拿${NAMES[G.color]}，已經下了 ${n} 手。`;
+    dot = G.over.winner; text = `${NAMES[G.over.winner]}獲勝`; who = "電腦";
+    sub = canUndo() ? "差一點！可以按「反悔」回去重下。" : "差一點！再來一局吧。";
   } else {
-    text = "輪到你了";
-    sub = pending >= 0 ? "再點一下同一格，就會放下棋子。"
-      : G.hint >= 0 ? "電腦建議下在綠圈的地方。"
-      : `你拿${NAMES[G.color]}，已經下了 ${n} 手。`;
+    text = `輪到${NAMES[turn()]}`;
+    who = turn() === G.color ? me : "電腦";
+    if (thinking || turn() !== G.color) sub = "電腦在想⋯";
+    else if (pending >= 0) sub = "再點一下同一格，就會放下棋子。";
+    else if (G.hint >= 0) sub = "電腦建議下在綠圈的地方。";
   }
   $("statusDot").className = "mini " + (dot === BLACK ? "black" : "white");
   $("status").textContent = text;
+  $("stName").textContent = who;
   $("sub").textContent = sub;
+  $("sub").hidden = !sub;
+  // 玩家自己下了幾子（排行榜比的就是這個數字）
+  $("meDot").className = "mini " + (G.color === BLACK ? "black" : "white");
+  $("movesN").textContent = String(playerMoves());
+  $("freeNote").textContent = G.replay || !G.ranked ? "這局不上排名" : `建議可 ${Math.max(0, FREE_HINT - G.hintUsed)} 次不影響排名`;
 
   // 誰比較有利
   const showWr = S.wr && !G.over;
@@ -1488,13 +1597,6 @@ function renderStatus(danger) {
   $("dangerNote").textContent = dn;
   $("dangerNote").hidden = !dn;
 
-  // 排名說明
-  let rn = "";
-  if (G.replay) rn = "這是從覆盤重下的棋，不會上排名。";
-  else if (!G.ranked) rn = "這局悔棋或建議一手超過免費次數，不會上排名。";
-  $("rankNote").textContent = rn;
-  $("rankNote").hidden = !rn;
-
   // 成績有沒有送到排行榜
   let rec = "", needName = false;
   if (G.over && G.recorded) {
@@ -1512,17 +1614,13 @@ function renderStatus(danger) {
 }
 
 function renderPanel() {
-  for (const b of document.querySelectorAll("#colorSeg button")) b.setAttribute("aria-pressed", String(Number(b.dataset.color) === S.color));
-  for (const b of document.querySelectorAll("#levelSeg button")) b.setAttribute("aria-pressed", String(Number(b.dataset.level) === S.level));
+  $("levelBadge").textContent = LEVEL_NAMES[G.level];
+  $("levelBadge").className = "lvtxt lv" + G.level;
   $("dangerBtn").setAttribute("aria-pressed", String(S.danger));
   $("wrBtn").setAttribute("aria-pressed", String(S.wr));
-  const freeText = (used, free) => G.replay || !G.ranked ? "這局不上排名" : used < free ? `免費還有 ${free - used} 次` : "免費次數用完了";
-  $("undoLeft").textContent = freeText(G.undoUsed, FREE_UNDO);
-  $("hintLeft").textContent = freeText(G.hintUsed, FREE_HINT);
   $("undoBtn").disabled = !canUndo();
   $("hintBtn").disabled = !myTurn() || G.hint >= 0;
   $("resignBtn").disabled = !inProgress();
-  $("reviewBtn").disabled = !GAMES.length;
 }
 
 // ---- 下棋 ----
@@ -1540,6 +1638,7 @@ function freshGame(color, level, moves = [], extra = {}) {
 }
 
 function newGame() {
+  hideEnd();
   cancelAI();
   anaBrain.cancel();
   pending = -1;
@@ -1580,6 +1679,7 @@ function finish() {
   else tune([392, 330], 0.22);
   archive();
   queueRecord();
+  showEnd();
 }
 
 function maybeAI() {
@@ -1629,7 +1729,7 @@ function evalNow() {
 
 // 手機上點一下先選位置，再點同一格才放下，避免點錯
 function onCell(p, pointerType) {
-  if (R || !myTurn() || G.board[p]) return;
+  if (R || startOpen || !myTurn() || G.board[p]) return;
   if (pointerType === "touch" && pending !== p) {
     pending = p;
     render();
@@ -1639,17 +1739,14 @@ function onCell(p, pointerType) {
   place(p);
 }
 
+// 反悔每局只能用一次，用了不影響排名
 function canUndo() {
-  return !!G && !R && playerMoves() > 0 && !(G.over && (G.over.resign || G.over.winner === G.color || G.recorded));
+  return !!G && !R && G.undoUsed < MAX_UNDO && playerMoves() > 0 && !(G.over && (G.over.resign || G.over.winner === G.color || G.recorded));
 }
 
-async function undo() {
+function undo() {
   if (!canUndo()) return;
-  if (G.ranked && !G.replay && G.undoUsed >= FREE_UNDO) {
-    const ok = await confirmNear($("undoBtn"), "免費悔棋用完了。再悔棋，這局就不能上排名。", "照樣悔棋");
-    if (!ok || !canUndo()) return;
-    G.ranked = false;
-  }
+  hideEnd();
   cancelAI();
   // 退到自己上一手之前：電腦的那手和自己的那手一起退
   while (G.moves.length) {
@@ -1677,6 +1774,7 @@ async function hint() {
   const k = G.moves.length, id = G.id;
   $("hintBtn").disabled = true;
   $("sub").textContent = "電腦正在幫你想⋯";
+  $("sub").hidden = false;
   const ev = await evalNow();
   if (!G || G.id !== id || G.moves.length !== k || !ev) { render(false); return; }
   G.hint = ev[0];
@@ -1696,22 +1794,100 @@ async function resign() {
   openReview(GAMES.find(e => e.id === G.id) || null);
 }
 
+// 重新開始：回到開局頁面重新選先後手與難度
 async function restart() {
   if (inProgress()) {
     const ok = await confirmNear($("newBtn"), "要重新開始嗎？這一局會不算。", "重新開始");
     if (!ok) return;
   }
-  newGame();
+  hideEnd();
+  cancelAI();
+  anaBrain.cancel();
+  pending = -1;
+  G = freshGame(S.color, S.level);
+  save();
+  render(false);
+  openStart();
 }
 
-async function changeSetting(key, value, anchor) {
-  if (S[key] === value) return;
-  if (inProgress()) {
-    const ok = await confirmNear(anchor, "換了設定要重新開始，這一局會不算。要換嗎？", "換了重新開始");
-    if (!ok) return;
-  }
+// ===== 開局頁面：選好先後手、難度才開始；開始以後就不能換 =====
+let startOpen = false;
+function needStart() { return !G || (!G.over && playerMoves() === 0); }
+function openStart() {
+  startOpen = true;
+  $("startMask").hidden = false;
+  $("nameInput").value = S.name;
+  $("nameInput").readOnly = !!S.name;
+  $("nameInput").placeholder = S.name ? "" : "可以不寫";
+  $("nameHint").textContent = S.name ? "要改名字：贏了或和局後，在結果畫面按「改名字」。" : "登上排行榜用的名字。";
+  $("nameErr").hidden = true;
+  renderStart();
+  $("startBtn").focus({ preventScroll: true });
+}
+function renderStart() {
+  for (const b of document.querySelectorAll("#colorSeg button")) b.setAttribute("aria-pressed", String(Number(b.dataset.color) === S.color));
+  for (const b of document.querySelectorAll("#levelSeg button")) b.setAttribute("aria-pressed", String(Number(b.dataset.level) === S.level));
+  $("startReview").disabled = !GAMES.length;
+}
+function closeStart() {
+  startOpen = false;
+  $("startMask").hidden = true;
+}
+function pick(key, value) {
   S[key] = value;
+  save();
+  renderStart();
+}
+function startGame() {
+  if (!S.name) {
+    const typed = $("nameInput").value.trim();
+    if (typed) {
+      const name = cleanName(typed);
+      if (!name) { $("nameErr").hidden = false; $("nameInput").focus(); return; }
+      S.name = name;
+    }
+  }
+  closeStart();
   newGame();
+  trySend();
+}
+
+// 遊戲說明、必勝口訣、演算法邏輯
+const INFO = {
+  help: ["遊戲說明", [
+    "黑棋先下，兩個人輪流把棋子放在線和線交叉的地方。",
+    "橫的、直的、斜的都可以，誰先把自己的五顆棋子連成一排就贏了，超過五顆也算。",
+    "棋盤下滿了還沒有人連成五顆，就是和局。",
+    "手機上點一下會先出現淡淡的棋子，再點同一格才會放下，比較不會點錯。",
+    "「反悔」每局只能用 1 次；「建議一手」可以免費用 3 次，再用的話，這局就不能上排行榜。",
+    "「危險提醒」「誰比較有利」可以一直開著，不影響排行榜。",
+    "贏了或和局，成績會登上排行榜，比的是你用幾手贏；每兩週重新開始一期。"]],
+  tips: ["必勝口訣", [
+    "先下中間：四面八方都能連。",
+    "棋子要靠在一起，散開來就連不起來。",
+    "自己能連成五顆，就直接下，不用擋！",
+    "對方四顆連在一起，一定要先擋。",
+    "對方三顆連一排、兩頭都空著，馬上擋一頭。",
+    "同時擺出兩條快連成的線（例如一條四顆加一條三顆），對方只能擋一條，你就贏了。"]],
+  algo: ["演算法邏輯", [
+    "弱：看每個位置能不能進攻、能不能防守，從前幾名裡隨便挑，常常沒注意到你的三顆。",
+    "中：每次都挑最好的位置，你快連成五顆時一定會擋。",
+    "強：會往後想 4 步，也會找「一直逼你擋」的連續攻擊。",
+    "最強：會往後想很多步，找連續攻擊的贏法，也會避開讓你能一直逼它擋的位置。",
+    "「誰比較有利」和「建議一手」用的是最強的想法。"]]
+};
+let infoReturn = null;
+function openInfo(kind, from) {
+  const [title, lines] = INFO[kind];
+  infoReturn = from;
+  $("infoTitle").textContent = title;
+  $("infoList").replaceChildren(...lines.map(t => { const li = document.createElement("li"); li.textContent = t; return li; }));
+  $("infoMask").hidden = false;
+  $("infoClose").focus({ preventScroll: true });
+}
+function closeInfo() {
+  $("infoMask").hidden = true;
+  if (infoReturn) infoReturn.focus({ preventScroll: true });
 }
 
 function toggleHelper(key) {
@@ -1782,7 +1958,8 @@ function closeReview() {
   $("gamePanel").hidden = false;
   $("reviewPanel").hidden = true;
   render(false);
-  analyzeLive();
+  if (needStart()) openStart();
+  else analyzeLive();
 }
 
 function neededPositions(e) {
@@ -1990,6 +2167,7 @@ function takeBoards(res) {
     }
   }
   RK.boards = boards;
+  if (Number.isFinite(res.updated)) RK.updated = res.updated;
   const p = res.period;
   if (p && typeof p === "object") {
     const okP = a => Array.isArray(a) && a.length === 2 && a.every(Number.isFinite);
@@ -2020,7 +2198,7 @@ async function trySend() {
         const ok = new Set(res.renamed);
         RK.renames = RK.renames.filter(x => !ok.has(x.id));
       }
-      takeBoards(res);
+      takeBoards(Object.assign({}, res, { updated: Date.now() }));
       RK.net = "ok";
     } else {
       RK.net = "old";
@@ -2035,46 +2213,99 @@ async function trySend() {
 
 function refreshRankViews() {
   if (!R && G) renderStatus(dangerInfo());
-  if (!$("rankMask").hidden) renderRank();
+  renderRank();
 }
 
-async function askName() {
-  const name = await promptNear($("nameBtn"), "你的名字（1 到 12 個字）：", "登上排行榜", S.name);
-  if (!name) return;
+// 還沒有名字時寫名字（狀態欄或結果畫面的按鈕）
+async function askName(anchor = $("nameBtn")) {
+  if (S.name) return;
+  const name = await promptNear(anchor, "你的名字（1 到 12 個字）：", "登上排行榜", "");
+  if (!name || S.name) return;
   S.name = name;
   save();
   render(false);
+  if (!$("endMask").hidden) renderEnd();
   trySend();
 }
 
-async function rename() {
-  const name = await promptNear($("renameBtn"), "新的名字（1 到 12 個字）：", "改好了", S.name);
+// 結果畫面的「改名字」：改這一局成績的名字，之後的成績也用新名字
+async function renameThis() {
+  if (!S.name || !G || !G.recorded) return;
+  const name = await promptNear($("endName"), "新的名字（1 到 12 個字）：", "改好了", S.name);
   if (!name || name === S.name) return;
   S.name = name;
   save();
-  // 已經送上去的成績，憑改名碼一起改
-  const sent = new Set(RK.pending.map(r => r.id));
-  RK.renames = RK.renames.filter(x => !(x.id in RK.mine));
-  for (const [id, code] of Object.entries(RK.mine)) if (!sent.has(id)) RK.renames.push({ id, code, name });
-  saveRank();
-  renderRank();
+  // 這局已經送上排行榜：憑改名碼改；還沒送出的，送的時候就會用新名字
+  if (!RK.pending.some(r => r.id === G.id) && RK.mine[G.id]) {
+    RK.renames = RK.renames.filter(x => x.id !== G.id);
+    RK.renames.push({ id: G.id, code: RK.mine[G.id], name });
+    saveRank();
+  }
+  render(false);
+  renderEnd();
   trySend();
 }
 
-const RV = { tab: "cur", level: 1, color: BLACK };
-let rankReturn = null;
-function openRank() {
-  rankReturn = $("rankBtn");
-  RV.level = S.level;
-  RV.color = S.color;
-  $("rankMask").hidden = false;
-  renderRank();
-  $(RV.tab === "cur" ? "tabCur" : "tabPrev").focus({ preventScroll: true });
-  trySend();
+// ===== 結果畫面 =====
+let endTimer = 0;
+function showEnd(delay = 700) {
+  clearTimeout(endTimer);
+  endTimer = setTimeout(() => {
+    endTimer = 0;
+    if (!G || !G.over || G.over.resign || R || startOpen) return;
+    renderEnd();
+    $("endMask").hidden = false;
+    $("endAgain").focus({ preventScroll: true });
+  }, delay);
 }
-function closeRank() {
-  $("rankMask").hidden = true;
-  if (rankReturn) rankReturn.focus({ preventScroll: true });
+function hideEnd() {
+  clearTimeout(endTimer);
+  endTimer = 0;
+  $("endMask").hidden = true;
+}
+function renderEnd() {
+  const res = resultOf(G);
+  $("endTitle").textContent = res === "draw" ? "和局" : res === "resign" ? "你認輸了"
+    : `${NAMES[G.over.winner]}獲勝（${G.over.winner === G.color ? "玩家" : "電腦"}）`;
+  // 獲勝那一方下了幾子（玩家贏時就是排行榜比的手數）
+  const winner = G.over.winner;
+  $("endScore").textContent = res === "win" || res === "lose" ? `${countOf(G.moves, winner)}手` : "";
+  $("endScore").hidden = !(res === "win" || res === "lose");
+  $("endSub").textContent = res === "lose" ? "電腦先連成五子了，再試一次！" : res === "draw" ? "棋盤下滿了，你們一樣厲害" : "";
+  $("endSub").hidden = !$("endSub").textContent;
+  const rec = $("endRec"), btn = $("endName");
+  if (res !== "win" && res !== "draw") {
+    rec.hidden = true;
+    return;
+  }
+  rec.hidden = false;
+  if (!G.recorded) {
+    rec.className = "end-rec off";
+    $("endRecText").textContent = G.replay ? "重下的棋不記錄" : "這局不記錄（建議超過免費次數）";
+    btn.hidden = true;
+  } else if (!S.name) {
+    rec.className = "end-rec";
+    $("endRecText").textContent = "寫名字登上排行榜";
+    btn.textContent = "寫名字";
+    btn.hidden = false;
+  } else {
+    rec.className = "end-rec";
+    $("endRecText").textContent = `已記錄（${S.name}）`;
+    btn.textContent = "改名字";
+    btn.hidden = false;
+  }
+}
+
+// 排名清單：難度高的在前，同難度執白在前（比較難贏），再照 byRank（手數少、後達成的在前，和局最後）
+const RV = { tab: "cur" };
+function rankRows(tab) {
+  const b = RK.boards && RK.boards[tab];
+  if (!b) return [];
+  const rows = [];
+  for (let lv = 3; lv >= 0; lv--) {
+    for (const c of [WHITE, BLACK]) for (const r of b[`${lv}-${c}`] || []) rows.push(Object.assign({ level: lv, color: c }, r));
+  }
+  return rows.sort((a, b2) => b2.level - a.level || b2.color - a.color || byRank(a, b2));
 }
 function setTab(tab, focus) {
   RV.tab = tab;
@@ -2088,29 +2319,28 @@ function renderRank() {
     $(id).setAttribute("aria-selected", String(RV.tab === tab));
     $(id).tabIndex = RV.tab === tab ? 0 : -1;
   }
-  for (const b of document.querySelectorAll("#rankLevel button")) b.setAttribute("aria-pressed", String(Number(b.dataset.level) === RV.level));
-  for (const b of document.querySelectorAll("#rankColor button")) b.setAttribute("aria-pressed", String(Number(b.dataset.color) === RV.color));
   const per = RK.period && RK.period[RV.tab];
-  $("rankPeriod").textContent = per ? `${RV.tab === "cur" ? "這一期" : "上一期"}：${fmtDay(per[0])}～${fmtDay(per[1] - 1)}（每兩週重新開始）` : "每兩週重新開始一期。";
-  const rows = (RK.boards && RK.boards[RV.tab] && RK.boards[RV.tab][`${RV.level}-${RV.color}`]) || [];
+  $("rankPeriod").textContent = per ? `${fmtDay(per[0])}～${fmtDay(per[1] - 1)}` : "";
+  const rows = rankRows(RV.tab);
   const list = $("rankList");
   if (!rows.length) {
     const li = document.createElement("li");
     li.className = "rank-empty";
-    li.textContent = RK.boards ? "還沒有人上榜，快來當第一名！" : "還沒拿到排行榜。";
+    li.textContent = RK.boards ? "還沒有人上榜，快來當第一名！" : "還沒拿到排名。";
     list.replaceChildren(li);
   } else {
     list.replaceChildren(...rows.map((r, i) => {
       const li = document.createElement("li");
       if (r.id in RK.mine) li.className = "mine";
-      const parts = [["no", String(i + 1)], ["nm", r.name + (r.id in RK.mine ? "（你）" : "")],
-        ["what", r.result === "win" ? `第 ${r.count} 手贏` : "和局"], ["when", fmtDay(r.t)]];
-      li.append(...parts.map(([c, t]) => { const s = document.createElement("span"); s.className = c; s.textContent = t; return s; }));
+      const parts = [["no", String(i + 1)], ["nm", r.name], ["lv lv" + r.level, LEVEL_NAMES[r.level]],
+        ["side", r.color === BLACK ? "●" : "○"], ["what", r.result === "win" ? `${r.count}手` : "和局"], ["when", fmtDay(r.t)]];
+      li.append(...parts.map(([c, t]) => { const sp = document.createElement("span"); sp.className = c; sp.textContent = t; return sp; }));
+      li.title = `${r.name}・${LEVEL_NAMES[r.level]}・${r.color === BLACK ? "執黑" : "執白"}・${r.result === "win" ? r.count + "手贏" : "和局"}・${fmtDay(r.t)}`;
       return li;
     }));
   }
-  $("rankName").textContent = S.name ? `你的名字：${S.name}` : "你還沒有寫名字。";
-  $("renameBtn").textContent = S.name ? "改名字" : "寫名字";
+  const d = RK.updated ? new Date(RK.updated) : null;
+  $("rankTime").textContent = d ? `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")} 更新` : "";
   const wait = RK.pending.length;
   let net = "";
   if (!SCRIPT_URL) net = "排行榜還沒開通，成績先存在這台裝置。";
@@ -2118,6 +2348,28 @@ function renderRank() {
   else if (RK.net === "old") net = "排行榜的程式還沒更新，成績先存起來。";
   if (wait) net += `還有 ${wait} 筆成績等著送出${S.name ? "" : "（寫下名字才會送出）"}。`;
   $("rankNet").textContent = net;
+  $("rankNet").hidden = !net;
+}
+
+// 匯出排名：下載成 CSV（用試算表打開時，名字開頭是 = + - @ 前面加 '，免得被當成公式）
+function exportRank() {
+  const rows = rankRows(RV.tab);
+  const cell = v => {
+    let t = String(v);
+    if (/^[=+\-@]/.test(t)) t = "'" + t;
+    return /[",\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
+  };
+  const lines = [["名次", "名字", "難度", "執子", "成績", "日期"].join(",")].concat(rows.map((r, i) =>
+    [i + 1, r.name, LEVEL_NAMES[r.level], r.color === BLACK ? "黑" : "白", r.result === "win" ? `${r.count}手` : "和局", fmtDay(r.t)].map(cell).join(",")));
+  const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `五子棋${RV.tab === "cur" ? "本期" : "上期"}排名.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  return lines;
 }
 
 // ---- 確認視窗與輸入名字：跳在按下的按鈕旁邊 ----
@@ -2175,20 +2427,20 @@ function init() {
   load();
   loadGames();
   loadRank();
-  applyTheme();
+  applySound();
   buildBoard();
   $("popOk").addEventListener("click", popOk);
   $("popCancel").addEventListener("click", () => closePop(null));
   $("popInput").addEventListener("keydown", e => { if (e.key === "Enter") popOk(); });
   $("popMask").addEventListener("click", e => { if (e.target === $("popMask")) closePop(null); });
-  $("rankMask").addEventListener("click", e => { if (e.target === $("rankMask")) closeRank(); });
   document.addEventListener("keydown", e => {
     if (e.key === "Escape") {
       if (popState) closePop(null);
-      else if (!$("rankMask").hidden) closeRank();
+      else if (!$("endMask").hidden) hideEnd();
+      else if (!$("infoMask").hidden) closeInfo();
       return;
     }
-    if (R && R.entry && !popState && $("rankMask").hidden && (e.key === "ArrowLeft" || e.key === "ArrowRight") && !(e.target && e.target.closest && e.target.closest(".cells"))) {
+    if (R && R.entry && !popState && (e.key === "ArrowLeft" || e.key === "ArrowRight") && !(e.target && e.target.closest && e.target.closest(".cells"))) {
       e.preventDefault();
       reviewStep(R.k + (e.key === "ArrowRight" ? 1 : -1));
     }
@@ -2200,23 +2452,29 @@ function init() {
   $("undoBtn").addEventListener("click", undo);
   $("hintBtn").addEventListener("click", hint);
   $("resignBtn").addEventListener("click", resign);
-  $("reviewBtn").addEventListener("click", () => openReview(null));
-  $("rankBtn").addEventListener("click", openRank);
-  $("nameBtn").addEventListener("click", askName);
+  $("nameBtn").addEventListener("click", () => askName($("nameBtn")));
+  $("endName").addEventListener("click", () => (S.name ? renameThis() : askName($("endName"))));
+  $("endReview").addEventListener("click", () => { hideEnd(); openReview(GAMES.find(e => e.id === G.id) || null); });
+  $("endAgain").addEventListener("click", () => { hideEnd(); restart(); });
+  $("endMask").addEventListener("click", e => { if (e.target === $("endMask")) hideEnd(); });
   $("dangerBtn").addEventListener("click", () => toggleHelper("danger"));
   $("wrBtn").addEventListener("click", () => toggleHelper("wr"));
-  $("themeBtn").addEventListener("click", () => {
-    S.theme = { auto: "light", light: "dark", dark: "auto" }[S.theme];
-    applyTheme();
-    save();
-  });
   $("soundBtn").addEventListener("click", () => {
     S.sound = !S.sound;
-    applyTheme();
+    applySound();
     save();
   });
-  for (const b of document.querySelectorAll("#colorSeg button")) b.addEventListener("click", () => changeSetting("color", Number(b.dataset.color), b));
-  for (const b of document.querySelectorAll("#levelSeg button")) b.addEventListener("click", () => changeSetting("level", Number(b.dataset.level), b));
+  // 開局頁面
+  for (const b of document.querySelectorAll("#colorSeg button")) b.addEventListener("click", () => pick("color", Number(b.dataset.color)));
+  for (const b of document.querySelectorAll("#levelSeg button")) b.addEventListener("click", () => pick("level", Number(b.dataset.level)));
+  $("startBtn").addEventListener("click", startGame);
+  $("nameInput").addEventListener("keydown", e => { if (e.key === "Enter") startGame(); });
+  $("startReview").addEventListener("click", () => { closeStart(); openReview(null); });
+  $("helpBtn").addEventListener("click", () => openInfo("help", $("helpBtn")));
+  $("tipsBtn").addEventListener("click", () => openInfo("tips", $("tipsBtn")));
+  $("algoBtn").addEventListener("click", () => openInfo("algo", $("algoBtn")));
+  $("infoClose").addEventListener("click", closeInfo);
+  $("infoMask").addEventListener("click", e => { if (e.target === $("infoMask")) closeInfo(); });
   // 覆盤
   $("rvFirst").addEventListener("click", () => reviewStep(0));
   $("rvPrev").addEventListener("click", () => reviewStep(R.k - 1));
@@ -2227,21 +2485,24 @@ function init() {
   $("rvList2").addEventListener("click", () => { anaBrain.cancel(); R.entry = null; render(false); });
   $("rvBack").addEventListener("click", closeReview);
   // 排行榜
-  $("rankClose").addEventListener("click", closeRank);
-  $("renameBtn").addEventListener("click", rename);
+  $("rankRefresh").addEventListener("click", trySend);
+  $("rankExport").addEventListener("click", exportRank);
   $("tabCur").addEventListener("click", () => setTab("cur"));
   $("tabPrev").addEventListener("click", () => setTab("prev"));
   $("rankTabs").addEventListener("keydown", e => {
     if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); setTab(RV.tab === "cur" ? "prev" : "cur", true); }
   });
-  for (const b of document.querySelectorAll("#rankLevel button")) b.addEventListener("click", () => { RV.level = Number(b.dataset.level); renderRank(); });
-  for (const b of document.querySelectorAll("#rankColor button")) b.addEventListener("click", () => { RV.color = Number(b.dataset.color); renderRank(); });
 
-  if (G) {
+  renderRank();
+  // 還沒開始下（或第一次玩）先到開局頁面；下到一半的棋接著下
+  if (needStart()) {
+    if (!G) G = freshGame(S.color, S.level);
+    render(false);
+    openStart();
+  } else {
     render(false);
     afterMove();
-  } else {
-    newGame();
+    if (G.over) showEnd(0);
   }
   trySend();
 }
