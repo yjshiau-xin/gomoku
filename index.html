@@ -333,7 +333,15 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .link:disabled { opacity: .4; cursor: not-allowed; }
 .start-help { display: block; margin: 16px auto 0; font-size: 17px; font-weight: 600; }
 .start-foot { display: flex; align-items: center; gap: 18px; margin-top: 18px; font-size: 15px; }
-.start-foot .ver { margin-left: auto; font-size: 15px; text-decoration: underline; text-underline-offset: 4px; }
+.ver-btn { margin-left: auto; color: var(--muted); font-size: 15px; }
+/* 版本紀錄 */
+#verMask { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; background: var(--bg); }
+#verMask h2 { margin: 18px 0 12px; text-align: center; font-family: "Songti TC", "STSong", serif; font-size: 40px; font-weight: 700; letter-spacing: .1em; color: var(--ink); }
+.ver-body { flex: 1; overflow-y: auto; width: min(640px, 100%); margin: 0 auto; padding: 4px 18px 18px; border-top: 1px solid var(--line); }
+.ver-body h3 { margin: 20px 0 6px; font-size: 19px; color: var(--accent); }
+.ver-body ul { margin: 0; padding-left: 1.3em; font-size: 16px; line-height: 1.75; }
+.ver-back { flex: none; width: min(640px, 100%); margin: 0 auto; padding: 16px; border: none; background: var(--accent); color: #FFF; font-size: 20px; font-weight: 700; letter-spacing: .2em; cursor: pointer; }
+.ver-back:hover { filter: brightness(.88); }
 .info-list { margin: 0; padding-left: 1.3em; font-size: 16px; line-height: 1.7; }
 .info-list li + li { margin-top: 6px; }
 /* 結果畫面：遊戲結束時跳出來 */
@@ -472,7 +480,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
           </div>
         </div>
         <div class="st-mid">
-          <button id="soundBtn" class="snd" type="button" aria-pressed="true">🔊 聲音</button>
+          <button id="soundBtn" class="snd" type="button" aria-pressed="false">🔇 靜音</button>
           <p id="freeNote" class="st-free">建議可 3 次不影響排名</p>
         </div>
         <div id="wrBox" class="wr" hidden>
@@ -490,8 +498,8 @@ button:disabled { opacity: .4; cursor: not-allowed; }
       </div>
 
       <div class="helpers" aria-label="小幫手（不影響排名）">
-        <button id="dangerBtn" type="button" aria-pressed="false">⚠️ 危險提醒</button>
-        <button id="wrBtn" type="button" aria-pressed="false">📊 誰比較有利</button>
+        <button id="dangerBtn" type="button" aria-pressed="true">⚠️ 危險提醒</button>
+        <button id="wrBtn" type="button" aria-pressed="true">📊 誰比較有利</button>
       </div>
 
       <div class="actions small">
@@ -557,8 +565,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
     </div>
     <div class="start-sec">
       <h3>輸入名字</h3>
-      <input id="nameInput" type="text" maxlength="12" autocomplete="nickname" placeholder="可以不寫" aria-label="輸入名字">
-      <p id="nameHint" class="hint">登上排行榜用的名字。</p>
+      <input id="nameInput" type="text" maxlength="12" autocomplete="nickname" value="玩家" aria-label="輸入名字">
       <p id="nameErr" class="err" hidden>名字要 1 到 12 個字。</p>
     </div>
     <div class="start-sec">
@@ -582,7 +589,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
     <div class="start-foot">
       <button id="algoBtn" class="link" type="button">演算法邏輯</button>
       <button id="tipsBtn" class="link" type="button">必勝口訣</button>
-      <span class="ver">v1.0.7</span>
+      <button id="verBtn" class="link ver-btn" type="button" aria-label="版本紀錄"><span class="ver">v1.0.11</span></button>
     </div>
   </div>
 </div>
@@ -598,6 +605,22 @@ button:disabled { opacity: .4; cursor: not-allowed; }
       <button id="endAgain" class="start-go" type="button">再來一局</button>
     </div>
   </div>
+</div>
+
+<div id="verMask" hidden role="dialog" aria-modal="true" aria-labelledby="verTitle">
+  <h2 id="verTitle">版本紀錄</h2>
+  <div class="ver-body">
+    <h3>v1.0　第一版（2026-10-23）</h3>
+    <ul>
+      <li><b>跟電腦下五子棋</b>：15×15 棋盤自由規則（五連以上即獲勝），提供弱、中、強、最強四級難度。</li>
+      <li><b>先下或後下</b>：開局可選執黑（先下）或執白（後下），開始後固定難度與先後手。</li>
+      <li><b>操作與輔助</b>：每局可「反悔」1 次、「建議一手」免費 3 次，並提供危險提醒與勝率長條。</li>
+      <li><b>完整覆盤系統</b>：自動記錄最近 10 局，一手一手回放並標註好壞棋，支援「從這手重下」。</li>
+      <li><b>雙週榮譽排名</b>：依難度高、執白優先、獲勝手數少依序排名，和局亦可上榜，支援匯出 CSV。</li>
+      <li><b>手機畫面優化</b>：手機上棋盤左右貼齊邊緣、格子放大更清晰，兩段式點擊防誤觸。</li>
+    </ul>
+  </div>
+  <button id="verBack" class="ver-back" type="button">返回</button>
 </div>
 
 <div id="infoMask" hidden>
@@ -1257,7 +1280,8 @@ const STORE_KEY = "gomoku.v1", GAMES_KEY = "gomoku.games", RANK_KEY = "gomoku.ra
 let SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGPMtuJiQrrlmJlxucCI4u_BnflOecgs-2cUSDMTSaamDgo8MOCisp4rv6G9opOQS_/exec";
 const NAMES = { [BLACK]: "黑棋", [WHITE]: "白棋" };
 
-const S = { color: BLACK, level: 1, sound: true, danger: false, wr: false, name: "" };
+// 預設：聲音關閉，危險提醒、誰比較有利開啟
+const S = { color: BLACK, level: 1, sound: false, danger: true, wr: true, name: "" };
 let G = null;       // 這一局
 let R = null;       // 覆盤：{ entry, k }；entry 是 null 時顯示棋局清單
 let GAMES = [];     // 下過的棋（最新的在前面）
@@ -1818,10 +1842,9 @@ function needStart() { return !G || (!G.over && playerMoves() === 0); }
 function openStart() {
   startOpen = true;
   $("startMask").hidden = false;
-  $("nameInput").value = S.name;
+  // 還沒有名字時預設填「玩家」；有名字就只能看
+  $("nameInput").value = S.name || "玩家";
   $("nameInput").readOnly = !!S.name;
-  $("nameInput").placeholder = S.name ? "" : "可以不寫";
-  $("nameHint").textContent = S.name ? "要改名字：贏了或和局後，在結果畫面按「改名字」。" : "登上排行榜用的名字。";
   $("nameErr").hidden = true;
   renderStart();
   $("startBtn").focus({ preventScroll: true });
@@ -1878,6 +1901,16 @@ const INFO = {
     "最強：會往後想很多步，找連續攻擊的贏法，也會避開讓你能一直逼它擋的位置。",
     "「誰比較有利」和「建議一手」用的是最強的想法。"]]
 };
+// 版本紀錄：開局頁面點版號打開
+function openVer() {
+  $("verMask").hidden = false;
+  $("verBack").focus({ preventScroll: true });
+}
+function closeVer() {
+  $("verMask").hidden = true;
+  $("verBtn").focus({ preventScroll: true });
+}
+
 let infoReturn = null;
 function openInfo(kind, from) {
   const [title, lines] = INFO[kind];
@@ -2439,6 +2472,7 @@ function init() {
     if (e.key === "Escape") {
       if (popState) closePop(null);
       else if (!$("endMask").hidden) hideEnd();
+      else if (!$("verMask").hidden) closeVer();
       else if (!$("infoMask").hidden) closeInfo();
       return;
     }
@@ -2476,6 +2510,8 @@ function init() {
   $("tipsBtn").addEventListener("click", () => openInfo("tips", $("tipsBtn")));
   $("algoBtn").addEventListener("click", () => openInfo("algo", $("algoBtn")));
   $("infoClose").addEventListener("click", closeInfo);
+  $("verBtn").addEventListener("click", openVer);
+  $("verBack").addEventListener("click", closeVer);
   $("infoMask").addEventListener("click", e => { if (e.target === $("infoMask")) closeInfo(); });
   // 覆盤
   $("rvFirst").addEventListener("click", () => reviewStep(0));
