@@ -428,7 +428,9 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   h1 { font-size: 26px; }
   .layout { flex-direction: column; align-items: stretch; gap: 14px; }
   .side { flex: none; }
-  .board { width: 100%; padding: 2.5%; }
+  /* 手機：棋盤貼齊螢幕左右、木框變細，格子才夠大 */
+  .board-wrap { margin: 0 -16px; }
+  .board { width: 100%; padding: 1.2%; border-radius: 0; box-shadow: none; }
   .panel { flex: none; }
   .status, .st-top .status { font-size: 18px; }
   .sbtn { padding: 6px 8px; font-size: 15px; }
@@ -580,7 +582,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
     <div class="start-foot">
       <button id="algoBtn" class="link" type="button">演算法邏輯</button>
       <button id="tipsBtn" class="link" type="button">必勝口訣</button>
-      <span class="ver">v1.0.6</span>
+      <span class="ver">v1.0.7</span>
     </div>
   </div>
 </div>
