@@ -591,7 +591,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
     <div class="start-foot">
       <button id="algoBtn" class="link" type="button">演算法邏輯</button>
       <button id="tipsBtn" class="link" type="button">必勝口訣</button>
-      <button id="verBtn" class="link ver-btn" type="button" aria-label="版本紀錄"><span class="ver">v1.0.13</span></button>
+      <button id="verBtn" class="link ver-btn" type="button" aria-label="版本紀錄"><span class="ver">v1.0.14</span></button>
     </div>
   </div>
 </div>
@@ -612,6 +612,10 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 <div id="verMask" hidden role="dialog" aria-modal="true" aria-labelledby="verTitle">
   <h2 id="verTitle">版本紀錄</h2>
   <div class="ver-body">
+    <h3>v1.0.14　最強更會防守（2026-10-24）</h3>
+    <ul>
+      <li><b>最強</b>：不下會讓你下一步就能同時做出兩個威脅（雙三、四三）的位置。</li>
+    </ul>
     <h3>v1.0.13　最強更會看（2026-10-24）</h3>
     <ul>
       <li><b>最強</b>：算到最後一步時再多看一步，比較不會漏看快變成活四的地方；「誰比較有利」「建議一手」和覆盤也更準。</li>
@@ -1134,13 +1138,25 @@ function ENGINE() {
     return -1;
   }
 
-  // 拿掉下了以後對方能連續衝四贏的位置
+  // 拿掉下了以後對方能連續衝四贏的位置；設定 dt 時，也拿掉對方兩步內能做出雙重威脅（雙三、四三）贏的位置
   function safeMoves(pos, side, moves) {
     const o = 3 - side, out = [];
-    for (const m of moves) {
+    let dt = !!(CUR && CUR.dt);
+    for (let i = 0; i < moves.length; i++) {
+      const m = moves[i];
       pos.put(m, side);
-      const bad = vcf(pos, o, 12) >= 0;
+      let bad = vcf(pos, o, 12) >= 0;
+      if (!bad && dt && !aborted && !pos.four[side]) {
+        bad = vctRoot(pos, o, 2) >= 0;
+        if (aborted) { bad = false; dt = false; }
+      }
       pos.take(m);
+      if (aborted && CUR && CUR.dt && !dt) {
+        // 雙重威脅的檢查時間用完：這手和剩下的不再檢查，照原順序保留
+        aborted = false;
+        for (let j = i; j < moves.length; j++) out.push(moves[j]);
+        break;
+      }
       if (aborted) return moves;
       if (!bad) out.push(m);
     }
@@ -1154,8 +1170,9 @@ function ENGINE() {
   }
 
   // 強、最強與勝率分析共用：回傳 { move, wr }，wr 是輪到的這方的勝率
-  // 強：候選點少、最多往後算 4 層、不檢查對方的連續衝四；最強：全部都做，算到底時再多看一步（q）
-  const LV = { 2: { K: 8, vcf: 8, vct: 0, jitter: 0.1, depth: 4, safe: false }, 3: { K: 12, vcf: 20, vct: 6, jitter: 0, depth: 30, safe: true, q: true } };
+  // 強：候選點少、最多往後算 4 層、不檢查對方的連續衝四；最強：全部都做，算到底時再多看一步（q），
+  // 並避開讓對方兩步內能做出雙重威脅的位置（dt）
+  const LV = { 2: { K: 8, vcf: 8, vct: 0, jitter: 0.1, depth: 4, safe: false }, 3: { K: 12, vcf: 20, vct: 6, jitter: 0, depth: 30, safe: true, q: true, dt: true } };
   function think(b, side, level, time, rnd = Math.random, over = null) {
     const cfg = Object.assign({}, LV[level] || LV[3], over || {});
     CUR = cfg;
