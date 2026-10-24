@@ -591,7 +591,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
     <div class="start-foot">
       <button id="algoBtn" class="link" type="button">演算法邏輯</button>
       <button id="tipsBtn" class="link" type="button">必勝口訣</button>
-      <button id="verBtn" class="link ver-btn" type="button" aria-label="版本紀錄"><span class="ver">v1.1.17</span></button>
+      <button id="verBtn" class="link ver-btn" type="button" aria-label="版本紀錄"><span class="ver">v1.1.18</span></button>
     </div>
   </div>
 </div>
@@ -1875,9 +1875,9 @@ function needStart() { return !G || (!G.over && playerMoves() === 0); }
 function openStart() {
   startOpen = true;
   $("startMask").hidden = false;
-  // 還沒有名字時預設填「玩家」；有名字就只能看
+  // 還沒有名字時預設填「玩家」；每次開局都能改，改了只影響之後的成績
   $("nameInput").value = S.name || "玩家";
-  $("nameInput").readOnly = !!S.name;
+  $("nameInput").readOnly = false;
   $("nameErr").hidden = true;
   renderStart();
   $("startBtn").focus({ preventScroll: true });
@@ -1897,13 +1897,12 @@ function pick(key, value) {
   renderStart();
 }
 function startGame() {
-  if (!S.name) {
-    const typed = $("nameInput").value.trim();
-    if (typed) {
-      const name = cleanName(typed);
-      if (!name) { $("nameErr").hidden = false; $("nameInput").focus(); return; }
-      S.name = name;
-    }
+  // 名字欄清空就沿用原本的名字（沒有就是沒有名字）；有寫就換成新名字
+  const typed = $("nameInput").value.trim();
+  if (typed) {
+    const name = cleanName(typed);
+    if (!name) { $("nameErr").hidden = false; $("nameInput").focus(); return; }
+    S.name = name;
   }
   closeStart();
   newGame();
