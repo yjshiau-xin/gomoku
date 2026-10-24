@@ -591,7 +591,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
     <div class="start-foot">
       <button id="algoBtn" class="link" type="button">演算法邏輯</button>
       <button id="tipsBtn" class="link" type="button">必勝口訣</button>
-      <button id="verBtn" class="link ver-btn" type="button" aria-label="版本紀錄"><span class="ver">v1.0.12</span></button>
+      <button id="verBtn" class="link ver-btn" type="button" aria-label="版本紀錄"><span class="ver">v1.0.13</span></button>
     </div>
   </div>
 </div>
@@ -612,6 +612,10 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 <div id="verMask" hidden role="dialog" aria-modal="true" aria-labelledby="verTitle">
   <h2 id="verTitle">版本紀錄</h2>
   <div class="ver-body">
+    <h3>v1.0.13　最強更會看（2026-10-24）</h3>
+    <ul>
+      <li><b>最強</b>：算到最後一步時再多看一步，比較不會漏看快變成活四的地方；「誰比較有利」「建議一手」和覆盤也更準。</li>
+    </ul>
     <h3>v1.0　第一版（2026-10-23）</h3>
     <ul>
       <li><b>跟電腦下五子棋</b>：15×15 棋盤自由規則（五連以上即獲勝），提供弱、中、強、最強四級難度。</li>
@@ -817,6 +821,7 @@ function ENGINE() {
       this.cnt = [null, new Uint8Array(NW), new Uint8Array(NW)];
       this.sum = [0, 0, 0];    // 各色的盤面分數
       this.four = [0, 0, 0];   // 各色「四子加一空」的組數：大於 0 就是下一手能連五
+      this.three = [0, 0, 0];  // 各色「三子加兩空」的組數：少於 2 就不可能有活四點
       this.near = new Uint8Array(NN);
       this.mark = new Int32Array(NN);
       this.stamp = 0;
@@ -829,11 +834,13 @@ function ENGINE() {
         const w = ws[i], a = cc[w], z = co[w];
         if (z === 0) {
           this.sum[c] += V[a + 1] - V[a];
-          if (a === 3) this.four[c]++;
+          if (a === 2) this.three[c]++;
+          else if (a === 3) { this.three[c]--; this.four[c]++; }
           else if (a === 4) this.four[c]--;
         } else if (a === 0) {
           this.sum[o] -= V[z];
-          if (z === 4) this.four[o]--;
+          if (z === 3) this.three[o]--;
+          else if (z === 4) this.four[o]--;
         }
         cc[w] = a + 1;
       }
@@ -851,11 +858,13 @@ function ENGINE() {
         cc[w] = a;
         if (z === 0) {
           this.sum[c] -= V[a + 1] - V[a];
-          if (a === 3) this.four[c]--;
+          if (a === 2) this.three[c]--;
+          else if (a === 3) { this.three[c]++; this.four[c]--; }
           else if (a === 4) this.four[c]++;
         } else if (a === 0) {
           this.sum[o] += V[z];
-          if (z === 4) this.four[o]++;
+          if (z === 3) this.three[o]++;
+          else if (z === 4) this.four[o]++;
         }
       }
       this.b[p] = 0;
@@ -941,6 +950,10 @@ function ENGINE() {
 
   function evaluate(pos, side) { return Math.round(pos.sum[side] * 1.25) - pos.sum[3 - side]; }
 
+  // 這次思考用的設定（強、最強不同）；QWIN：算到底時輪到的一方能下成活四，當成快贏了
+  let CUR = null;
+  const QWIN = 50000;
+
   function negamax(pos, side, depth, alpha, beta, ply, K) {
     if (tick()) return 0;
     const o = 3 - side;
@@ -953,6 +966,8 @@ function ENGINE() {
       moves = f;
       if (depth < 1) depth = 1;
     } else if (depth <= 0) {
+      // 多看一步：對方沒有四，輪到的一方又能下成活四，幾乎就贏了（避免水平線效應）
+      if (CUR && CUR.q && pos.three[side] >= 2 && pos.openFourPoints(side).length) return QWIN - ply;
       return evaluate(pos, side);
     }
     if (pos.n >= NN) return 0;
@@ -1139,10 +1154,11 @@ function ENGINE() {
   }
 
   // 強、最強與勝率分析共用：回傳 { move, wr }，wr 是輪到的這方的勝率
-  // 強：候選點少、最多往後算 4 層、不檢查對方的連續衝四；最強：全部都做
-  const LV = { 2: { K: 8, vcf: 8, vct: 0, jitter: 0.1, depth: 4, safe: false }, 3: { K: 12, vcf: 20, vct: 6, jitter: 0, depth: 30, safe: true } };
+  // 強：候選點少、最多往後算 4 層、不檢查對方的連續衝四；最強：全部都做，算到底時再多看一步（q）
+  const LV = { 2: { K: 8, vcf: 8, vct: 0, jitter: 0.1, depth: 4, safe: false }, 3: { K: 12, vcf: 20, vct: 6, jitter: 0, depth: 30, safe: true, q: true } };
   function think(b, side, level, time, rnd = Math.random, over = null) {
     const cfg = Object.assign({}, LV[level] || LV[3], over || {});
+    CUR = cfg;
     const pos = new Pos(b), o = 3 - side, t0 = now();
     nodes = 0; aborted = false; deadline = t0 + time;
     const out = (move, wr, how, depth = 0) => ({ move, wr, how, depth, ms: now() - t0, nodes });
