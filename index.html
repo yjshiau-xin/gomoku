@@ -427,7 +427,6 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .rank-detail dt { color: var(--muted); font-size: 15px; }
 .rank-detail dd { margin: 0; font-weight: 700; font-size: 15px; }
 .rank-detail dd.acc { color: var(--accent); }
-.kifu-n { margin-right: 10px; font-weight: 400; color: var(--muted); }
 .rk-btn { margin-right: 8px; padding: 4px 12px; border: none; border-radius: 2px; background: var(--accent); color: #1B1405; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .rk-btn:hover { filter: brightness(.88); }
 .rank-foot { display: flex; gap: 24px; margin-top: 12px; font-size: 16px; }
@@ -602,7 +601,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
     <div class="start-foot">
       <button id="algoBtn" class="link" type="button">演算法邏輯</button>
       <button id="tipsBtn" class="link" type="button">必勝口訣</button>
-      <button id="verBtn" class="link ver-btn" type="button" aria-label="版本紀錄"><span class="ver">v1.1.19</span></button>
+      <button id="verBtn" class="link ver-btn" type="button" aria-label="版本紀錄"><span class="ver">v1.1.20</span></button>
     </div>
   </div>
 </div>
@@ -2450,9 +2449,6 @@ function rankDetail(r, i) {
   const dt = document.createElement("dt"), dd = document.createElement("dd");
   dt.textContent = "棋譜";
   if (r.moves) {
-    const n = document.createElement("span");
-    n.className = "kifu-n";
-    n.textContent = `${r.moves.length} 手`;
     const view = document.createElement("button"), copy = document.createElement("button");
     view.type = copy.type = "button";
     view.className = copy.className = "rk-btn";
@@ -2460,7 +2456,7 @@ function rankDetail(r, i) {
     copy.textContent = "複製";
     view.addEventListener("click", e => { e.stopPropagation(); viewRecord(r); });
     copy.addEventListener("click", e => { e.stopPropagation(); copyKifu(r, copy); });
-    dd.append(n, view, copy);
+    dd.append(view, copy);
   } else {
     dd.textContent = "—";
   }
