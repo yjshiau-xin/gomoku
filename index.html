@@ -419,6 +419,17 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .rank-list .what { text-align: right; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .rank-list .when { text-align: right; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .rank-empty { display: block !important; padding: 28px 0 !important; text-align: center; color: var(--muted); font-size: 16px !important; }
+.rank-list li.rank-row { cursor: pointer; }
+.rank-list li.rank-row:hover, .rank-list li.rank-row.open { background: rgba(200, 164, 77, .10); }
+.rank-list li.rank-row:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.rank-list li.rank-detail { display: block; padding: 6px 8px 14px 30px; background: rgba(200, 164, 77, .10); }
+.rank-detail dl { display: grid; grid-template-columns: 6em 1fr; gap: 8px 12px; margin: 0; align-items: center; }
+.rank-detail dt { color: var(--muted); font-size: 15px; }
+.rank-detail dd { margin: 0; font-weight: 700; font-size: 15px; }
+.rank-detail dd.acc { color: var(--accent); }
+.kifu-n { margin-right: 10px; font-weight: 400; color: var(--muted); }
+.rk-btn { margin-right: 8px; padding: 4px 12px; border: none; border-radius: 2px; background: var(--accent); color: #1B1405; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.rk-btn:hover { filter: brightness(.88); }
 .rank-foot { display: flex; gap: 24px; margin-top: 12px; font-size: 16px; }
 .rank-foot .link { color: var(--muted); }
 .rank-foot .link:hover { color: var(--ink); }
@@ -591,7 +602,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
     <div class="start-foot">
       <button id="algoBtn" class="link" type="button">演算法邏輯</button>
       <button id="tipsBtn" class="link" type="button">必勝口訣</button>
-      <button id="verBtn" class="link ver-btn" type="button" aria-label="版本紀錄"><span class="ver">v1.1.18</span></button>
+      <button id="verBtn" class="link ver-btn" type="button" aria-label="版本紀錄"><span class="ver">v1.1.19</span></button>
     </div>
   </div>
 </div>
@@ -1318,7 +1329,8 @@ const S = { color: BLACK, level: 1, sound: false, danger: true, wr: true, name: 
 let G = null;       // 這一局
 let R = null;       // 覆盤：{ entry, k }；entry 是 null 時顯示棋局清單
 let GAMES = [];     // 下過的棋（最新的在前面）
-const RK = { pending: [], renames: [], mine: {}, boards: null, period: null, net: "" };
+const RK = { pending: [], renames: [], mine: {}, boards: null, period: null, net: "", ver: null };
+const BACKEND_VER = 2;   // 網頁需要的後端版本（scoreboard_apps_script.gs 的 VERSION）
 let thinking = false, aiTimer = 0, pending = -1, focusIdx = CENTER, lastPointer = "mouse";
 
 const $ = id => document.getElementById(id);
@@ -1369,7 +1381,7 @@ function save() {
   store(STORE_KEY, {
     settings: S,
     game: G && { id: G.id, color: G.color, level: G.level, moves: G.moves, undoUsed: G.undoUsed, hintUsed: G.hintUsed,
-      ranked: G.ranked, replay: G.replay, recorded: G.recorded, resign: !!(G.over && G.over.resign), evals: G.evals }
+      ranked: G.ranked, replay: G.replay, recorded: G.recorded, resign: !!(G.over && G.over.resign), evals: G.evals, started: G.started }
   });
 }
 
@@ -1395,8 +1407,10 @@ function load() {
   if (!r) return;
   let over = r.over;
   if (g.resign && !over) over = { winner: 3 - g.color, resign: true };
+  // 開始時間（算對局長度用）：舊存檔沒有，或不合理時就從現在算
+  const started = Number.isFinite(g.started) && g.started <= Date.now() && g.started > Date.now() - 7 * 24 * 3600 * 1000 ? g.started : Date.now();
   G = { id: g.id, color: g.color, level: g.level, board: r.board, moves: g.moves.slice(), over, undoUsed: g.undoUsed, hintUsed: g.hintUsed,
-    ranked: g.ranked, replay: g.replay, recorded: g.recorded, evals: g.evals.slice(), hint: -1 };
+    ranked: g.ranked, replay: g.replay, recorded: g.recorded, evals: g.evals.slice(), hint: -1, started };
 }
 
 function saveGames() { store(GAMES_KEY, GAMES); }
@@ -1414,7 +1428,8 @@ function saveRank() { store(RANK_KEY, { pending: RK.pending, renames: RK.renames
 function okRecord(r) {
   return r && typeof r === "object" && /^[0-9a-f]{16}$/.test(r.id) && /^[0-9a-f]{32}$/.test(r.code) && [0, 1, 2, 3].includes(r.level) &&
     (r.color === BLACK || r.color === WHITE) && (r.result === "win" || r.result === "draw") && Number.isInteger(r.count) &&
-    Array.isArray(r.moves) && E.replay(r.moves) && Number.isFinite(r.t);
+    Array.isArray(r.moves) && E.replay(r.moves) && Number.isFinite(r.t) &&
+    ["hints", "undos", "dur"].every(k => r[k] === undefined || (Number.isInteger(r[k]) && r[k] >= 0));
 }
 function loadRank() {
   const d = fetchStore(RANK_KEY);
@@ -1693,7 +1708,7 @@ function cancelAI() {
 function freshGame(color, level, moves = [], extra = {}) {
   const r = E.replay(moves);
   return Object.assign({ id: randHex(16), color, level, board: r.board, moves: moves.slice(), over: null, undoUsed: 0, hintUsed: 0,
-    ranked: true, replay: false, recorded: false, evals: [], hint: -1 }, extra);
+    ranked: true, replay: false, recorded: false, evals: [], hint: -1, started: Date.now() }, extra);
 }
 
 function newGame() {
@@ -1979,7 +1994,11 @@ function fmtTime(t) {
   const d = new Date(t), pad = x => String(x).padStart(2, "0");
   return `${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
-function gameTitle(e) { return `你拿${NAMES[e.color]}・電腦${LEVEL_NAMES[e.level]}・${RESULT_TEXT[e.result]}`; }
+function gameTitle(e) {
+  // 從排名看別人的棋譜時，用對方的名字
+  if (e.external) return `${e.name}拿${NAMES[e.color]}・電腦${LEVEL_NAMES[e.level]}・${e.result === "win" ? countOf(e.moves, e.color) + "手獲勝" : "和局"}`;
+  return `你拿${NAMES[e.color]}・電腦${LEVEL_NAMES[e.level]}・${RESULT_TEXT[e.result]}`;
+}
 
 // 玩家第 i 手（棋譜索引）的評語
 function gradeOf(e, i) {
@@ -2009,7 +2028,7 @@ function explain(e, i, gr) {
 }
 
 function openReview(entry) {
-  if (!GAMES.length) return;
+  if (!entry && !GAMES.length) return;
   pending = -1;
   anaBrain.cancel();
   anaWaiters = [];
@@ -2076,7 +2095,7 @@ function renderReview(animate) {
   $("rvListCard").hidden = !!e;
   $("rvGameCard").hidden = !e;
   $("rvRetry").hidden = !e;
-  $("rvKeep").hidden = !e;
+  $("rvKeep").hidden = !e || !!e.external;   // 排名上的棋譜沒有存在這台裝置，不能「保留」
   $("rvList2").hidden = !e;
   if (!e) {
     drawBoard(Object.assign(gameView(), { myturn: false, marks: new Map() }), false);
@@ -2119,7 +2138,7 @@ function renderReview(animate) {
     text = "按 ▶ 一手一手往下看。";
   } else {
     const i = k - 1, who = moveColor(i) === e.color;
-    step = `${who ? "你" : "電腦"}的第 ${countOf(e.moves, moveColor(i), k)} 手`;
+    step = `${who ? (e.external ? e.name : "你") : "電腦"}的第 ${countOf(e.moves, moveColor(i), k)} 手`;
     if (who) {
       const gr = gradeOf(e, i);
       if (!gr) text = "電腦還在看這一手⋯";
@@ -2197,7 +2216,9 @@ function queueRecord() {
   const res = resultOf(G);
   if (res !== "win" && res !== "draw") return;
   const code = randHex(32);
-  RK.pending.push({ id: G.id, code, level: G.level, color: G.color, result: res, count: playerMoves(), moves: G.moves.slice(), t: Date.now() });
+  const dur = Math.min(7 * 24 * 3600, Math.max(0, Math.round((Date.now() - G.started) / 1000)));
+  RK.pending.push({ id: G.id, code, level: G.level, color: G.color, result: res, count: playerMoves(), moves: G.moves.slice(), t: Date.now(),
+    hints: G.hintUsed, undos: G.undoUsed, dur });
   RK.mine[G.id] = code;
   G.recorded = true;
   saveRank();
@@ -2217,8 +2238,12 @@ async function fetchJSON(url, opts = {}) {
 }
 
 function okRow(x) {
-  return x && typeof x === "object" && typeof x.id === "string" && typeof x.name === "string" && x.name.length <= 40 &&
-    (x.result === "win" || x.result === "draw") && Number.isInteger(x.count) && Number.isFinite(x.t);
+  if (!(x && typeof x === "object" && typeof x.id === "string" && typeof x.name === "string" && x.name.length <= 40 &&
+    (x.result === "win" || x.result === "draw") && Number.isInteger(x.count) && Number.isFinite(x.t))) return false;
+  // 詳細資料（新版後端才有）：格式不對就當成沒有
+  if (!(Array.isArray(x.moves) && x.moves.length <= NN && E.replay(x.moves))) x.moves = null;
+  for (const k of ["hints", "undos", "dur"]) if (!(Number.isInteger(x[k]) && x[k] >= 0)) x[k] = null;
+  return true;
 }
 function takeBoards(res) {
   if (!res || typeof res.boards !== "object" || !res.boards) return;
@@ -2249,14 +2274,23 @@ async function trySend() {
   const recs = S.name ? RK.pending : [];
   sending = true;
   try {
-    let res;
-    if (recs.length || RK.renames.length) {
+    let res = null;
+    const want = recs.length || RK.renames.length;
+    // 新格式的成績（有建議一手、反悔、對局長度）只送給第 2 版以後的後端；還不知道後端版本就先讀一次
+    if (!want || RK.ver !== BACKEND_VER) {
+      res = await fetchJSON(SCRIPT_URL + "?t=" + Date.now());
+      RK.ver = res && res.gomoku;
+    }
+    if (want && RK.ver === BACKEND_VER) {
       const body = { records: recs.map(r => Object.assign({}, r, { name: S.name })), renames: RK.renames };
       res = await fetchJSON(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) });
-    } else {
-      res = await fetchJSON(SCRIPT_URL + "?t=" + Date.now());
+      RK.ver = res && res.gomoku;
     }
     if (res && res.gomoku === 1) {
+      // 舊版後端：排名照樣顯示，成績留在待送清單，等後端更新
+      takeBoards(Object.assign({}, res, { updated: Date.now() }));
+      RK.net = "old";
+    } else if (res && res.gomoku === BACKEND_VER) {
       const done = new Set([...(Array.isArray(res.accepted) ? res.accepted : []),
         ...(Array.isArray(res.rejected) ? res.rejected.map(x => x && x.id) : [])]);
       RK.pending = RK.pending.filter(r => !done.has(r.id));
@@ -2364,7 +2398,7 @@ function renderEnd() {
 }
 
 // 排名清單：難度高的在前，同難度執白在前（比較難贏），再照 byRank（手數少、後達成的在前，和局最後）
-const RV = { tab: "cur" };
+const RV = { tab: "cur", open: null };   // open：展開詳細資料的那一列
 function rankRows(tab) {
   const b = RK.boards && RK.boards[tab];
   if (!b) return [];
@@ -2380,6 +2414,94 @@ function setTab(tab, focus) {
   if (focus) $(tab === "cur" ? "tabCur" : "tabPrev").focus({ preventScroll: true });
 }
 function fmtDay(t) { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()}`; }
+function fmtFull(t) {
+  const d = new Date(t), p = x => String(x).padStart(2, "0");
+  return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function fmtDur(s) { return s < 60 ? `${s} 秒` : `${Math.floor(s / 60)} 分 ${s % 60} 秒`; }
+// 棋譜座標：橫的 A～O，直的從下往上 1～15（例：天元是 H8）
+function coord(p) { return "ABCDEFGHIJKLMNO"[p % N] + (N - Math.floor(p / N)); }
+const resultLabel = r => (r.result === "win" ? `${r.count}手獲勝` : "和局");
+
+// 排名的詳細資料：點一列就在下面展開
+function rankDetail(r, i) {
+  const li = document.createElement("li");
+  li.className = "rank-detail";
+  const dl = document.createElement("dl");
+  const times = v => (v === null || v === undefined ? "—" : `${v} 次`);
+  const rowsDef = [
+    ["名次", `第 ${i + 1} 名`],
+    ["名字", r.name, "acc"],
+    ["電腦難易度", LEVEL_NAMES[r.level], "lvtxt lv" + r.level],
+    ["玩家執棋", r.color === BLACK ? "黑棋（先下）" : "白棋（後下）"],
+    ["成績", resultLabel(r)],
+    ["建議一手", times(r.hints)],
+    ["反悔", times(r.undos)],
+    ["結束時間", fmtFull(r.t)],
+    ["對局長度", r.dur === null || r.dur === undefined ? "—" : fmtDur(r.dur)]
+  ];
+  for (const [k, v, cls] of rowsDef) {
+    const dt = document.createElement("dt"), dd = document.createElement("dd");
+    dt.textContent = k;
+    dd.textContent = v;
+    if (cls) dd.className = cls;
+    dl.append(dt, dd);
+  }
+  const dt = document.createElement("dt"), dd = document.createElement("dd");
+  dt.textContent = "棋譜";
+  if (r.moves) {
+    const n = document.createElement("span");
+    n.className = "kifu-n";
+    n.textContent = `${r.moves.length} 手`;
+    const view = document.createElement("button"), copy = document.createElement("button");
+    view.type = copy.type = "button";
+    view.className = copy.className = "rk-btn";
+    view.textContent = "看棋譜";
+    copy.textContent = "複製";
+    view.addEventListener("click", e => { e.stopPropagation(); viewRecord(r); });
+    copy.addEventListener("click", e => { e.stopPropagation(); copyKifu(r, copy); });
+    dd.append(n, view, copy);
+  } else {
+    dd.textContent = "—";
+  }
+  dl.append(dt, dd);
+  li.appendChild(dl);
+  return li;
+}
+
+// 看棋譜：用覆盤畫面一手一手看這盤棋（不存進「下過的棋」）
+function viewRecord(r) {
+  if (!r.moves) return;
+  openReview({ id: r.id, t: r.t, color: r.color, level: r.level, moves: r.moves.slice(), result: r.result,
+    ranked: true, replay: false, kept: false, evals: [], external: true, name: r.name });
+}
+
+// 複製棋譜：一行說明＋「1.H8 2.G7 …」
+function kifuText(r) {
+  return `五子棋　${r.name}　電腦${LEVEL_NAMES[r.level]}　${r.color === BLACK ? "執黑" : "執白"}　${resultLabel(r)}　${fmtFull(r.t)}\n` +
+    r.moves.map((p, i) => `${i + 1}.${coord(p)}`).join(" ");
+}
+function copyKifu(r, btn) {
+  const text = kifuText(r);
+  const done = ok => {
+    if (!btn) return;
+    btn.textContent = ok ? "已複製" : "複製失敗";
+    setTimeout(() => { btn.textContent = "複製"; }, 1500);
+  };
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(() => done(true), () => done(false)); return text; }
+  } catch (e) { /* 改用下面的舊方法 */ }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand ? document.execCommand("copy") : false;
+    ta.remove();
+    done(ok);
+  } catch (e) { done(false); }
+  return text;
+}
 
 function renderRank() {
   for (const [id, tab] of [["tabCur", "cur"], ["tabPrev", "prev"]]) {
@@ -2396,15 +2518,25 @@ function renderRank() {
     li.textContent = RK.boards ? "還沒有人上榜，快來當第一名！" : "還沒拿到排名。";
     list.replaceChildren(li);
   } else {
-    list.replaceChildren(...rows.map((r, i) => {
+    const items = [];
+    rows.forEach((r, i) => {
       const li = document.createElement("li");
-      if (r.id in RK.mine) li.className = "mine";
+      const open = RV.open === r.id;
+      li.className = (r.id in RK.mine ? "mine " : "") + "rank-row" + (open ? " open" : "");
       const parts = [["no", String(i + 1)], ["nm", r.name], ["lv lv" + r.level, LEVEL_NAMES[r.level]],
         ["side", r.color === BLACK ? "●" : "○"], ["what", r.result === "win" ? `${r.count}手` : "和局"], ["when", fmtDay(r.t)]];
       li.append(...parts.map(([c, t]) => { const sp = document.createElement("span"); sp.className = c; sp.textContent = t; return sp; }));
-      li.title = `${r.name}・${LEVEL_NAMES[r.level]}・${r.color === BLACK ? "執黑" : "執白"}・${r.result === "win" ? r.count + "手贏" : "和局"}・${fmtDay(r.t)}`;
-      return li;
-    }));
+      li.title = "點一下看詳細";
+      li.tabIndex = 0;
+      li.setAttribute("role", "button");
+      li.setAttribute("aria-expanded", String(open));
+      const toggle = () => { RV.open = open ? null : r.id; renderRank(); };
+      li.addEventListener("click", toggle);
+      li.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+      items.push(li);
+      if (open) items.push(rankDetail(r, i));
+    });
+    list.replaceChildren(...items);
   }
   const d = RK.updated ? new Date(RK.updated) : null;
   $("rankTime").textContent = d ? `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")} 更新` : "";
